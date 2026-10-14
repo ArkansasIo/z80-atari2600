@@ -11,3 +11,7 @@ ctest --test-dir build --output-on-failure
 ```
 
 See `docs/` for architecture and scope. This is an educational foundation, not yet a cycle-accurate Atari 2600 emulator.
+
+## Current status
+
+The initial CPU scaffold is intentionally incomplete. Implemented instructions: NOP, LD r,n (A/B/C/D/E/H/L), INC B, DEC B, ADD A,B, JP nn, and HALT. Unsupported opcodes fail loudly. The GitHub Actions workflow builds with CMake and runs the smoke tests.
