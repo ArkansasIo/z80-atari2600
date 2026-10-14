@@ -15,3 +15,13 @@ See `docs/` for architecture and scope. This is an educational foundation, not y
 ## Current status
 
 The initial CPU scaffold is intentionally incomplete. Implemented instructions: NOP, LD r,n (A/B/C/D/E/H/L), INC B, DEC B, ADD A,B, JP nn, and HALT. Unsupported opcodes fail loudly. The GitHub Actions workflow builds with CMake and runs the smoke tests.
+
+## Assemble a sample
+
+Python 3 is required for the optional assembler and its tests. The assembler supports a documented subset of Z80 instructions and emits a flat binary:
+
+```sh
+python tools/z80asm.py examples/loop.asm -o out/loop.bin
+```
+
+See [assembler documentation](docs/ASSEMBLER.md), [opcode coverage](docs/OPCODE_COVERAGE.md), and the [roadmap](docs/ROADMAP.md). This remains an educational subset, not a complete or cycle-accurate Z80/Atari 2600 emulator.
