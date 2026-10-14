@@ -1,0 +1,9 @@
+/build/
+/out/
+*.a26
+*.bin
+*.rom
+*.o
+*.obj
+*.exe
+.DS_Store
