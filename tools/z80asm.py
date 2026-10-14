@@ -63,7 +63,7 @@ def encode(mnemonic: str, args: list[str], labels: dict[str, int]) -> list[int]:
         return [(0x04 if mnemonic == "INC" else 0x05) + reg * 8]
     if mnemonic == "LD":
         dst, src = args
-        if dst in IMM8:
+        if dst in IMM8 and src != "(HL)":
             value = number(src, labels)
             if not 0 <= value <= 255: raise ValueError("8-bit immediate out of range")
             return [IMM8[dst], value]
