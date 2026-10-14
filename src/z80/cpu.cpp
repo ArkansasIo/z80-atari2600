@@ -3,8 +3,7 @@
 #include <stdexcept>
 namespace z80 {
 namespace {
-constexpr std::uint8_t flag_s=0x80, flag_z=0x40, flag_pv=0x04, flag_c=0x01;
-bool even_parity(std::uint8_t v) { unsigned n=0; for(unsigned i=0;i<8;++i) n+=(v>>i)&1U; return n%2U==0U; }
+constexpr std::uint8_t flag_s=0x80, flag_z=0x40, flag_pv=0x04, flag_h=0x10, flag_n=0x02, flag_c=0x01;
 }
 void Cpu::reset(){ r=Registers{}; halted=false; memory.fill(0); }
 void Cpu::load(const std::vector<std::uint8_t>& p,std::uint16_t a){
@@ -14,8 +13,9 @@ void Cpu::load(const std::vector<std::uint8_t>& p,std::uint16_t a){
 std::uint8_t Cpu::fetch8(){ return memory[r.pc++]; }
 std::uint16_t Cpu::fetch16(){ const auto lo=fetch8(); const auto hi=fetch8(); return static_cast<std::uint16_t>(lo|(static_cast<std::uint16_t>(hi)<<8U)); }
 void Cpu::set_zero_sign(std::uint8_t v){
- r.f=static_cast<std::uint8_t>(r.f&static_cast<std::uint8_t>(~(flag_s|flag_z|flag_pv)));
- if(v==0) r.f|=flag_z; if((v&0x80U)!=0) r.f|=flag_s; if(even_parity(v)) r.f|=flag_pv;
+ r.f=static_cast<std::uint8_t>(r.f&static_cast<std::uint8_t>(~(flag_s|flag_z)));
+ if(v==0) r.f|=flag_z;
+ if((v&0x80U)!=0) r.f|=flag_s;
 }
 StepResult Cpu::step(){
  if(halted) return {4,true};
@@ -29,12 +29,22 @@ StepResult Cpu::step(){
  case 0x1E:r.e=fetch8();return {7,false};
  case 0x26:r.h=fetch8();return {7,false};
  case 0x2E:r.l=fetch8();return {7,false};
- case 0x04:++r.b;set_zero_sign(r.b);return {4,false};
- case 0x05:--r.b;set_zero_sign(r.b);return {4,false};
+ case 0x04:{
+  const auto old=r.b; ++r.b; set_zero_sign(r.b);
+  r.f=static_cast<std::uint8_t>(r.f&static_cast<std::uint8_t>(~(flag_pv|flag_h|flag_n)));
+  if(old==0x7F)r.f|=flag_pv; if((old&0x0F)==0x0F)r.f|=flag_h;
+  return {4,false};
+ }
+ case 0x05:{
+  const auto old=r.b; --r.b; set_zero_sign(r.b);
+  r.f=static_cast<std::uint8_t>(r.f&static_cast<std::uint8_t>(~(flag_pv|flag_h)));
+  r.f|=flag_n; if(old==0x80)r.f|=flag_pv; if((old&0x0F)==0)r.f|=flag_h;
+  return {4,false};
+ }
  case 0x80:{
   const auto old=r.a; const unsigned sum=static_cast<unsigned>(old)+r.b; const auto result=static_cast<std::uint8_t>(sum);
   r.f=0; set_zero_sign(result); if(sum>0xFFU)r.f|=flag_c;
-  if(((old^r.b^result)&0x10U)!=0)r.f|=0x10;
+  if(((old^r.b^result)&0x10U)!=0)r.f|=flag_h;
   if(((~(old^r.b)&(old^result))&0x80U)!=0)r.f|=flag_pv;
   r.a=result;return {4,false};
  }
