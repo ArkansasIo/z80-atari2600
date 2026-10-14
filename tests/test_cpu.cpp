@@ -2,8 +2,14 @@
 #include <cassert>
 #include <stdexcept>
 int main(){
- {z80::Cpu c;c.load({0x3E,0x02,0x06,0x03,0x80,0x76});c.run();assert(c.r.a==5);assert(c.halted);}
- {z80::Cpu c;c.load({0x06,0xFF,0x04,0x76});c.run();assert(c.r.b==0);assert((c.r.f&0x40U)!=0);}
- {z80::Cpu c;bool threw=false;try{c.load({0x00,0x00},0xFFFF);}catch(const std::out_of_range&){threw=true;}assert(threw);}
- {z80::Cpu c;c.load({0xFF});bool threw=false;try{(void)c.step();}catch(const std::runtime_error&){threw=true;}assert(threw);}
+ {z80::Cpu c;c.load({0x3E,2,0x06,3,0x80,0x76});c.run();assert(c.r.a==5&&c.halted);}
+ {z80::Cpu c;c.load({0x06,0xFF,0x04,0x76});c.run();assert(c.r.b==0&&(c.r.f&0x40U));}
+ {z80::Cpu c;bool t=false;try{c.load({0,0},0xFFFF);}catch(const std::out_of_range&){t=true;}assert(t);}
+ {z80::Cpu c;c.load({0xFF});bool t=false;try{(void)c.step();}catch(const std::runtime_error&){t=true;}assert(t);}
+ {z80::Cpu c;c.load({0x3E,0x10,0x06,0x22,0x78,0x76});c.run();assert(c.r.a==0x22&&c.r.b==0x22);}
+ {z80::Cpu c;c.load({0x3E,4,0xC6,3,0xD6,2,0x76});c.run();assert(c.r.a==5);}
+ {z80::Cpu c;c.load({0x3E,0x0F,0xE6,0x0F,0xEE,3,0xF6,0x10,0xFE,0x1C,0x76});c.run();assert(c.r.a==0x1C&&(c.r.f&0x40U));}
+ {z80::Cpu c;c.load({0x26,0x20,0x2E,0,0x36,0x42,0x7E,0x76});c.run();assert(c.r.a==0x42);}
+ {z80::Cpu c;c.load({0x3E,1,0x06,1,0x90,0x76});c.run();assert(c.r.a==0&&(c.r.f&0x40U));}
+ {z80::Cpu c;c.load({0x3E,1,0xFE,1,0xCA,0x08,0x00,0x3E,0xFF,0x76});c.run();assert(c.r.a==1);}
 }
