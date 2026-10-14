@@ -48,6 +48,7 @@ def instruction_size(mnemonic: str, operands: list[str]) -> int:
         if dst in REGS and src in REGS: return 1
     if mnemonic in ALU_REG and len(operands) in (1, 2):
         if len(operands) == 1 and operands[0] in REGS: return 1
+        if len(operands) == 1 and mnemonic != "ADD": return 2
         if len(operands) == 2 and operands[0] == "A" and operands[1] in REGS: return 1
         if len(operands) == 2 and operands[0] == "A": return 2
     if mnemonic == "JP" and len(operands) in (1, 2):
@@ -72,13 +73,12 @@ def encode(mnemonic: str, args: list[str], labels: dict[str, int]) -> list[int]:
             return [0x36, value]
         return [0x40 + REGS[dst] * 8 + REGS[src]]
     if mnemonic in ALU_REG:
-        if len(args) == 1: reg = args[0]
-        elif args[0] == "A" and args[1] in REGS: reg = args[1]
-        else:
-            value = number(args[1], labels)
-            if not 0 <= value <= 255: raise ValueError("8-bit immediate out of range")
-            return [ALU_IMM[mnemonic], value]
-        return [ALU_REG[mnemonic] + REGS[reg]]
+        if len(args) == 1 and args[0] in REGS: return [ALU_REG[mnemonic] + REGS[args[0]]]
+        if len(args) == 2 and args[0] == "A" and args[1] in REGS: return [ALU_REG[mnemonic] + REGS[args[1]]]
+        immediate = args[0] if len(args) == 1 else args[1]
+        value = number(immediate, labels)
+        if not 0 <= value <= 255: raise ValueError("8-bit immediate out of range")
+        return [ALU_IMM[mnemonic], value]
     if mnemonic == "JP":
         if len(args) == 1: opcode, target = 0xC3, args[0]
         elif args[0] == "NZ": opcode, target = 0xC2, args[1]
